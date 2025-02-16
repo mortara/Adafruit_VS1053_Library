@@ -19,12 +19,6 @@
 
 #include <Adafruit_SPIDevice.h>
 
-#if defined(PREFER_SDFAT_LIBRARY)
-#include <SdFat.h>
-extern SdFat SD;
-#else
-#include <SD.h>
-#endif
 
 // define here the size of a register!
 #if defined(ARDUINO_STM32_FEATHER)
@@ -342,7 +336,7 @@ public:
    * @return Returs true/false for success/failure
    */
   boolean useInterrupt(uint8_t type);
-  File currentTrack;             //!< File that is currently playing
+  
   volatile boolean playingMusic; //!< Whether or not music is playing
   /*!
    * @brief Feeds the buffer. Reads mp3 file data from the SD card and file and
@@ -354,27 +348,8 @@ public:
    * @param fileName File to check
    * @return Returns true or false
    */
-  static boolean isMP3File(const char *fileName);
-  /*!
-   * @brief Checks for an ID3 tag at the beginning of the file.
-   * @param mp3 File to read
-   * @return returns the seek position within the file where the mp3 data starts
-   */
-  unsigned long mp3_ID3Jumper(File mp3);
-  /*!
-   * @brief Begin playing the specified file from the SD card using
-   * interrupt-drive playback.
-   * @param *trackname File to play
-   * @return Returns true when file starts playing
-   */
-  boolean startPlayingFile(const char *trackname);
-  /*!
-   * @brief Play the complete file. This function will not return until the
-   * playback is complete
-   * @param *trackname File to play
-   * @return Returns true when file starts playing
-   */
-  boolean playFullFile(const char *trackname);
+  
+  
   void stopPlaying(void); //!< Stop playback
   /*!
    * @brief If playback is paused

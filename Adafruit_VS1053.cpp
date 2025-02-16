@@ -141,33 +141,16 @@ boolean Adafruit_VS1053_FilePlayer::begin(void) {
 }
 
 boolean Adafruit_VS1053_FilePlayer::playFullFile(const char *trackname) {
-  if (!startPlayingFile(trackname))
-    return false;
-
-  while (playingMusic) {
-    // twiddle thumbs
-    feedBuffer();
-    delay(5); // give IRQs a chance
-  }
-  // music file finished!
+ 
   return true;
 }
 
 void Adafruit_VS1053_FilePlayer::stopPlaying(void) {
-  // cancel all playback
-  sciWrite(VS1053_REG_MODE, VS1053_MODE_SM_LINE1 | VS1053_MODE_SM_SDINEW |
-                                VS1053_MODE_SM_CANCEL);
-
-  // wrap it up!
-  playingMusic = false;
-  currentTrack.close();
+ 
 }
 
 void Adafruit_VS1053_FilePlayer::pausePlaying(boolean pause) {
-  playingMusic = (!pause && currentTrack);
-  if (playingMusic) {
-    feedBuffer();
-  }
+  
 }
 
 boolean Adafruit_VS1053_FilePlayer::paused(void) {
@@ -186,93 +169,17 @@ boolean Adafruit_VS1053_FilePlayer::playbackLooped() { return _loopPlayback; }
 
 // Just checks to see if the name ends in ".mp3"
 boolean Adafruit_VS1053_FilePlayer::isMP3File(const char *fileName) {
-  return (strlen(fileName) > 4) &&
-         !strcasecmp(fileName + strlen(fileName) - 4, ".mp3");
+  return (strstr(fileName, ".mp3") != 0);
 }
 
 unsigned long Adafruit_VS1053_FilePlayer::mp3_ID3Jumper(File mp3) {
 
-  char tag[4];
-  uint32_t start;
-  unsigned long current;
-
-  start = 0;
-  if (mp3) {
-    current = mp3.position();
-    if (mp3.seek(0)) {
-      if (mp3.read((uint8_t *)tag, 3)) {
-        tag[3] = '\0';
-        if (!strcmp(tag, "ID3")) {
-          if (mp3.seek(6)) {
-            start = 0ul;
-            for (byte i = 0; i < 4; i++) {
-              start <<= 7;
-              start |= (0x7F & mp3.read());
-            }
-          } else {
-            // Serial.println("Second seek failed?");
-          }
-        } else {
-          // Serial.println("It wasn't the damn TAG.");
-        }
-      } else {
-        // Serial.println("Read for the tag failed");
-      }
-    } else {
-      // Serial.println("Seek failed? How can seek fail?");
-    }
-    mp3.seek(current); // Put you things away like you found 'em.
-  } else {
-    // Serial.println("They handed us a NULL file!");
-  }
-  // Serial.print("Jumper returning: "); Serial.println(start);
-  return start;
+ 
+  return 0;
 }
 
 boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
-  // reset playback
-  sciWrite(VS1053_REG_MODE, VS1053_MODE_SM_LINE1 | VS1053_MODE_SM_SDINEW |
-                                VS1053_MODE_SM_LAYER12);
-  // resync
-  sciWrite(VS1053_REG_WRAMADDR, 0x1e29);
-  sciWrite(VS1053_REG_WRAM, 0);
-
-  currentTrack = SD.open(trackname);
-  if (!currentTrack) {
-    return false;
-  }
-
-  // We know we have a valid file. Check if .mp3
-  // If so, check for ID3 tag and jump it if present.
-  if (isMP3File(trackname)) {
-    currentTrack.seek(mp3_ID3Jumper(currentTrack));
-  }
-
-  // don't let the IRQ get triggered by accident here
-  noInterrupts();
-
-  // As explained in datasheet, set twice 0 in REG_DECODETIME to set time back
-  // to 0
-  sciWrite(VS1053_REG_DECODETIME, 0x00);
-  sciWrite(VS1053_REG_DECODETIME, 0x00);
-
-  playingMusic = true;
-
-  // wait till its ready for data
-  while (!readyForData()) {
-#if defined(ESP8266)
-    ESP.wdtFeed();
-#endif
-  }
-
-  // fill it up!
-  while (playingMusic && readyForData()) {
-    feedBuffer();
-  }
-
-  // ok going forward, we can use the IRQ
-  interrupts();
-
+ 
   return true;
 }
 
@@ -414,59 +321,7 @@ void Adafruit_VS1053::applyPatch(const uint16_t *patch, uint16_t patchsize) {
 
 uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
 
-  File plugin = SD.open(plugname);
-  if (!plugin) {
-    Serial.println("Couldn't open the plugin file");
-    Serial.println(plugin);
-    return 0xFFFF;
-  }
-
-  if ((plugin.read() != 'P') || (plugin.read() != '&') ||
-      (plugin.read() != 'H'))
-    return 0xFFFF;
-
-  uint16_t type;
-
-  // Serial.print("Patch size: "); Serial.println(patchsize);
-  while ((type = plugin.read()) >= 0) {
-    uint16_t offsets[] = {0x8000UL, 0x0, 0x4000UL};
-    uint16_t addr, len;
-
-    // Serial.print("type: "); Serial.println(type, HEX);
-
-    if (type >= 4) {
-      plugin.close();
-      return 0xFFFF;
-    }
-
-    len = plugin.read();
-    len <<= 8;
-    len |= plugin.read() & ~1;
-    addr = plugin.read();
-    addr <<= 8;
-    addr |= plugin.read();
-    // Serial.print("len: "); Serial.print(len);
-    // Serial.print(" addr: $"); Serial.println(addr, HEX);
-
-    if (type == 3) {
-      // execute rec!
-      plugin.close();
-      return addr;
-    }
-
-    // set address
-    sciWrite(VS1053_REG_WRAMADDR, addr + offsets[type]);
-    // write data
-    do {
-      uint16_t data;
-      data = plugin.read();
-      data <<= 8;
-      data |= plugin.read();
-      sciWrite(VS1053_REG_WRAM, data);
-    } while ((len -= 2));
-  }
-
-  plugin.close();
+  
   return 0xFFFF;
 }
 
