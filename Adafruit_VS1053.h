@@ -343,11 +343,7 @@ public:
    * puts it into the buffer that the decoder reads from to play a file
    */
   void feedBuffer(void);
-  /*!
-   * @brief Checks if the inputted filename is an mp3
-   * @param fileName File to check
-   * @return Returns true or false
-   */
+
   
   
   void stopPlaying(void); //!< Stop playback

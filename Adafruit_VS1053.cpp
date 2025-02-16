@@ -154,11 +154,11 @@ void Adafruit_VS1053_FilePlayer::pausePlaying(boolean pause) {
 }
 
 boolean Adafruit_VS1053_FilePlayer::paused(void) {
-  return (!playingMusic && currentTrack);
+  return (!playingMusic);
 }
 
 boolean Adafruit_VS1053_FilePlayer::stopped(void) {
-  return (!playingMusic && !currentTrack);
+  return (!playingMusic);
 }
 
 void Adafruit_VS1053_FilePlayer::playbackLoop(boolean loopState) {
@@ -167,21 +167,6 @@ void Adafruit_VS1053_FilePlayer::playbackLoop(boolean loopState) {
 
 boolean Adafruit_VS1053_FilePlayer::playbackLooped() { return _loopPlayback; }
 
-// Just checks to see if the name ends in ".mp3"
-boolean Adafruit_VS1053_FilePlayer::isMP3File(const char *fileName) {
-  return (strstr(fileName, ".mp3") != 0);
-}
-
-unsigned long Adafruit_VS1053_FilePlayer::mp3_ID3Jumper(File mp3) {
-
- 
-  return 0;
-}
-
-boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
- 
-  return true;
-}
 
 void Adafruit_VS1053_FilePlayer::feedBuffer(void) {
   noInterrupts();
@@ -203,35 +188,7 @@ void Adafruit_VS1053_FilePlayer::feedBuffer(void) {
 }
 
 void Adafruit_VS1053_FilePlayer::feedBuffer_noLock(void) {
-  if ((!playingMusic) // paused or stopped
-      || (!currentTrack) || (!readyForData())) {
-    return; // paused or stopped
-  }
-
-  // Feed the hungry buffer! :)
-  while (readyForData()) {
-    // Read some audio data from the SD card file
-    int bytesread = currentTrack.read(mp3buffer, VS1053_DATABUFFERLEN);
-
-    if (bytesread == 0) {
-      // must be at the end of the file
-      if (_loopPlayback) {
-        // play in loop
-        if (isMP3File(currentTrack.name())) {
-          currentTrack.seek(mp3_ID3Jumper(currentTrack));
-        } else {
-          currentTrack.seek(0);
-        }
-      } else {
-        // wrap it up!
-        playingMusic = false;
-        currentTrack.close();
-        break;
-      }
-    }
-
-    playData(mp3buffer, bytesread);
-  }
+  
 }
 
 // get current playback speed. 0 or 1 indicates normal speed
