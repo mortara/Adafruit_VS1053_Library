@@ -140,11 +140,6 @@ boolean Adafruit_VS1053_FilePlayer::begin(void) {
   return (v == 4);
 }
 
-boolean Adafruit_VS1053_FilePlayer::playFullFile(const char *trackname) {
- 
-  return true;
-}
-
 void Adafruit_VS1053_FilePlayer::stopPlaying(void) {
  
 }
